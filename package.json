@@ -1,0 +1,26 @@
+{
+  "name": "skint",
+  "version": "1.0.0",
+  "description": "A Node app to parse pages from theskint.com into calendar events.",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "parse": "node src/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/svasandani/skint.git"
+  },
+  "author": "Shailesh Vasandani",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/svasandani/skint/issues"
+  },
+  "homepage": "https://github.com/svasandani/skint#readme",
+  "dependencies": {
+    "jsdom": "^23.0.1",
+    "luxon": "^3.4.4",
+    "node-fetch": "^3.3.2"
+  }
+}
