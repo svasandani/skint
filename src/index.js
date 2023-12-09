@@ -2,9 +2,10 @@ import { JSDOM } from "jsdom";
 import { DateTime } from "luxon";
 import fetch from "node-fetch";
 
+import { authorize } from "./calendar.js";
 import { parseNodes } from "./parse.js";
 
-const BASE_URL = "https://theskint.com/?p=";
+const URL = "https://theskint.com/rss";
 
 const main = async () => {
   const guid = process.argv.pop();
@@ -13,10 +14,9 @@ const main = async () => {
     throw new Error("Invalid GUID, should be number!");
   }
 
-  // const response = await fetch(BASE_URL + guid);
-  // const text = await response.text();
+  const auth = await authorize();
 
-  const response = await fetch(`https://theskint.com/rss`);
+  const response = await fetch(URL);
   const text = await response.text();
 
   const shadowDom = new JSDOM("");
@@ -37,7 +37,7 @@ const main = async () => {
       const parsedEvents = parseNodes(pNodes, DateTime.fromJSDate(new Date(xmlPubDate.textContent)));
       
       for (const event of parsedEvents) {
-        await event.createCalendarEvent();
+        process.env.LIVE === "true" ? await event.createCalendarEvent(auth) : await event.logCalendarEvent();
       }
     };
   }

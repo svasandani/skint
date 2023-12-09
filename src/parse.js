@@ -71,7 +71,10 @@ const parseDate = (dateString, relativeDate) => {
 
   let startString, endString;
 
-  if (dateString.includes("-")) {
+  if (dateString.includes("thru")) {
+    startString = `${relativeDate.month}/${relativeDate.day}`;
+    endString = dateString.split("thru ")[1];
+  } else if (dateString.includes("-")) {
     [startString, endString] = dateString.split("-");
   } else {
     startString = dateString;
@@ -151,6 +154,26 @@ const TIME_REGEX = "\\(?[\\d:]+?(am|pm)?(-[\\d:]+?)?(am|pm)\\)?";
 
 const REGEXES = [
   {
+    regex: new RegExp(`thru ${DATE_REGEX}(\\.|:| )`, "g"),
+    getData: (match, relativeDate) => {
+      const date = parseDate(match, relativeDate);
+
+      return [{
+        start: DateTime.fromObject({
+          year: date.startYear,
+          month: date.startMonth,
+          day: date.startDay,
+        }),
+        end: DateTime.fromObject({
+          year: date.endYear,
+          month: date.endMonth,
+          day: date.endDay,
+        }),
+        hasTime: false,
+      }]
+    }
+  },
+  {
     regex: new RegExp(`${DATE_REGEX} ${TIME_REGEX} \\+ ${TIME_REGEX}`, "g"),
     getData: (match, relativeDate) => {
       const [dateAndFirstTimeString, secondTimeString] = match.split(" + ");
@@ -169,13 +192,13 @@ const REGEXES = [
             hour: firstTime.startHour,
             minute: firstTime.startMinute,
           }),
-          end: firstTime.endHour ? DateTime.fromObject({
+          end: DateTime.fromObject({
             year: date.endYear,
             month: date.endMonth,
             day: date.endDay,
-            hour: firstTime.endHour,
-            minute: firstTime.endMinute,
-          }) : undefined,
+            hour: firstTime?.endHour ?? firstTime.startHour,
+            minute: firstTime?.endHour ? firstTime?.endMinute : firstTime.startMinute,
+          }).plus(firstTime?.endHour ? {} : {hour: 1}),
           hasTime: true,
         },
         {
@@ -186,20 +209,20 @@ const REGEXES = [
             hour: secondTime.startHour,
             minute: secondTime.startMinute,
           }),
-          end: secondTime.endHour ? DateTime.fromObject({
+          end: DateTime.fromObject({
             year: date.endYear,
             month: date.endMonth,
             day: date.endDay,
-            hour: secondTime.endHour,
-            minute: secondTime.endMinute,
-          }) : undefined,
+            hour: secondTime?.endHour ?? secondTime.startHour,
+            minute: secondTime?.endHour ? secondTime?.endMinute : secondTime.startMinute,
+          }).plus(secondTime?.endHour ? {} : {hour: 1}),
           hasTime: true,
         },
       ]
     }
   },
   {
-    regex: new RegExp(`${DATE_REGEX} \\+ ${DAY_OF_WEEK_REGEX}(:| ${TIME_REGEX})?`, "g"),
+    regex: new RegExp(`${DATE_REGEX} \\+ ${DAY_OF_WEEK_REGEX}(\\.|:| ${TIME_REGEX})?`, "g"),
     getData: (match, relativeDate) => {
       const [firstDateString, secondDateAndTimeString] = match.split(" + ");
       const [secondDateString, timeString] = secondDateAndTimeString.split(" ");
@@ -217,13 +240,13 @@ const REGEXES = [
             hour: time?.startHour,
             minute: time?.startMinute,
           }),
-          end: time && time.endHour ? DateTime.fromObject({
+          end: DateTime.fromObject({
             year: firstDate.endYear,
             month: firstDate.endMonth,
             day: firstDate.endDay,
-            hour: time?.endHour,
-            minute: time?.endMinute,
-          }) : undefined,
+            hour: time?.endHour ?? time?.startHour,
+            minute: time?.endHour ? time?.endMinute : time?.startMinute,
+          }).plus(time?.endHour ? {} : {hour: 1}),
           hasTime: !!time,
         },
         {
@@ -234,23 +257,23 @@ const REGEXES = [
             hour: time?.startHour,
             minute: time?.startMinute,
           }),
-          end: time && time.endHour ? DateTime.fromObject({
+          end: DateTime.fromObject({
             year: secondDate.endYear,
             month: secondDate.endMonth,
             day: secondDate.endDay,
-            hour: time?.endHour,
-            minute: time?.endMinute,
-          }) : undefined,
+            hour: time?.endHour ?? time?.startHour,
+            minute: time?.endHour ? time?.endMinute : time?.startMinute,
+          }).plus(time?.endHour ? {} : {hour: 1}),
           hasTime: !!time,
         },
       ]
     }
   },
   {
-    regex: new RegExp(`${DATE_REGEX}(:| ${TIME_REGEX})`, "g"),
+    regex: new RegExp(`${DATE_REGEX}(\\.|:| ${TIME_REGEX})`, "g"),
     getData: (match, relativeDate) => {
       const [dateString, timeString] = match.split(" ");
-      
+
       const date = parseDate(dateString, relativeDate);
       const time = timeString ? parseTime(timeString) : undefined;
 
@@ -262,13 +285,13 @@ const REGEXES = [
           hour: time?.startHour,
           minute: time?.startMinute,
         }),
-        end: time && time.endHour ? DateTime.fromObject({
+        end: DateTime.fromObject({
           year: date.endYear,
           month: date.endMonth,
           day: date.endDay,
-          hour: time?.endHour,
-          minute: time?.endMinute,
-        }) : undefined,
+          hour: time?.endHour ?? time?.startHour,
+          minute: time?.endHour ? time?.endMinute : time?.startMinute,
+        }).plus(time?.endHour ? {} : {hour: 1}),
         hasTime: !!time,
       }]
     }
@@ -279,7 +302,7 @@ const REGEXES = [
  * parseDate parses dates from a string.
  * @param {string} nodeText 
  * @param {DateTime} relativeDate
- * @returns {{ start: DateTime, end?: DateTime, hasTime: boolean }[]}
+ * @returns {{ start: DateTime, end: DateTime, hasTime: boolean }[]}
  */
 const parseDateTime = (nodeText, relativeDate) => {
   for (const { regex, getData } of REGEXES) {
