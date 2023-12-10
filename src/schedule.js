@@ -26,53 +26,100 @@ export class Event {
    *
    * @param {google.auth.OAuth2} auth
    */
+  async findMatchingCalendarEvent(auth) {
+    const thisEvent = this;
+
+    return new Promise((resolve, reject) => {
+      google.calendar("v3").events.list(
+        {
+          auth,
+          calendarId: process.env.GOOGLE_CALENDAR_ID,
+          q: thisEvent.title,
+        },
+        function (err, response) {
+          if (err) {
+            console.error({
+              msg: "Error connecting to Calendar API",
+              err,
+            });
+            reject(err);
+          }
+
+          const events = response?.data?.items ?? [];
+
+          resolve(
+            events.find(
+              (event) =>
+                event.summary === thisEvent.title &&
+                event.description === thisEvent.description &&
+                event.location === thisEvent.location &&
+                (event.start.date === thisEvent.start.toISODate() ||
+                  event.start.dateTime ===
+                    thisEvent.start.toISO({ suppressMilliseconds: true })) &&
+                (event.end.date === thisEvent.end.toISODate() ||
+                  event.end.dateTime ===
+                    thisEvent.end.toISO({ suppressMilliseconds: true }))
+            )
+          );
+        }
+      );
+    });
+  }
+
+  /**
+   *
+   * @param {google.auth.OAuth2} auth
+   */
   async createCalendarEvent(auth) {
-    await new Promise((resolve, reject) => {
+    const thisEvent = this;
+
+    return new Promise((resolve, reject) => {
       google.calendar("v3").events.insert(
         {
           auth,
           calendarId: process.env.GOOGLE_CALENDAR_ID,
           resource: {
-            summary: this.title,
-            location: this.location,
-            description: this.description,
-            start: this.hasTime
+            summary: thisEvent.title,
+            location: thisEvent.location,
+            description: thisEvent.description,
+            start: thisEvent.hasTime
               ? {
-                  dateTime: this.start.toISO(),
+                  dateTime: thisEvent.start.toISO({
+                    suppressMilliseconds: true,
+                  }),
                   timeZone: "America/New_York",
                 }
               : {
-                  date: this.start.toISODate(),
+                  date: thisEvent.start.toISODate(),
                   timeZone: "America/New_York",
                 },
-            end: this.hasTime
+            end: thisEvent.hasTime
               ? {
-                  dateTime: this.end.toISO(),
+                  dateTime: thisEvent.end.toISO({ suppressMilliseconds: true }),
                   timeZone: "America/New_York",
                 }
               : {
-                  date: this.end.toISODate(),
+                  date: thisEvent.end.toISODate(),
                   timeZone: "America/New_York",
                 },
-            reminders: {
-              useDefault: true,
-            },
           },
         },
-        function (err, event) {
-          if (err) {
-            console.error(
-              "There was an error contacting the Calendar service: " + err
-            );
+        function (err, response) {
+          if (err || !response?.data) {
+            console.error({
+              msg: "Error connecting to Calendar API",
+              err,
+            });
             reject(err);
           }
-          resolve(event);
+
+          resolve(response.data);
         }
       );
     });
   }
 
   async logCalendarEvent() {
-    console.log(JSON.stringify(this));
+    console.info(this);
   }
 }

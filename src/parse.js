@@ -108,7 +108,9 @@ const parseDate = (dateString, relativeDate) => {
     }
 
     const dayDelta = (7 + startDayOfWeek - relativeDate.weekday) % 7;
-    startDate = relativeDate.plus({ days: dayDelta }).set({ hour: 12, minute: 0 });
+    startDate = relativeDate
+      .plus({ days: dayDelta })
+      .set({ hour: 12, minute: 0 });
     endDate = startDate;
   }
 
@@ -145,7 +147,9 @@ const parseDate = (dateString, relativeDate) => {
       }
 
       const dayDelta = (7 + endDayOfWeek - relativeDate.weekday) % 7;
-      endDate = relativeDate.plus({ days: dayDelta - 1 }).set({ hour: 12, minute: 0 });
+      endDate = relativeDate
+        .plus({ days: dayDelta - 1 })
+        .set({ hour: 12, minute: 0 });
     }
   }
 
@@ -231,7 +235,7 @@ const FILTERS = [
     key: "sundays",
     filter: (dateTime) => dateTime.weekday === 7,
   },
-]
+];
 const FILTER_REGEX = `(${FILTERS.map(({ key }) => key).join("|")})`;
 
 const REGEXES = [
@@ -249,7 +253,7 @@ const REGEXES = [
           start,
           end: end.plus({ days: 1 }),
           hasTime: false,
-        }
+        },
       ];
     },
   },
@@ -272,12 +276,14 @@ const REGEXES = [
               hour: firstTime.startHour,
               minute: firstTime.startMinute,
             }),
-            end: end.set({
-              hour: firstTime.endHour ?? firstTime.startHour,
-              minute: firstTime.endHour
-                ? firstTime.endMinute
-                : firstTime.startMinute,
-            }).plus(firstTime.endHour ? {} : { hours: 1 }),
+            end: end
+              .set({
+                hour: firstTime.endHour ?? firstTime.startHour,
+                minute: firstTime.endHour
+                  ? firstTime.endMinute
+                  : firstTime.startMinute,
+              })
+              .plus(firstTime.endHour ? {} : { hours: 1 }),
             hasTime: true,
           },
           {
@@ -285,12 +291,14 @@ const REGEXES = [
               hour: secondTime.startHour,
               minute: secondTime.startMinute,
             }),
-            end: end.set({
-              hour: secondTime.endHour ?? secondTime.startHour,
-              minute: secondTime.endHour
-                ? secondTime.endMinute
-                : secondTime.startMinute,
-            }).plus(secondTime.endHour ? {} : { hours: 1 }),
+            end: end
+              .set({
+                hour: secondTime.endHour ?? secondTime.startHour,
+                minute: secondTime.endHour
+                  ? secondTime.endMinute
+                  : secondTime.startMinute,
+              })
+              .plus(secondTime.endHour ? {} : { hours: 1 }),
             hasTime: true,
           },
         ])
@@ -319,10 +327,12 @@ const REGEXES = [
             hour: time.startHour,
             minute: time.startMinute,
           }),
-          end: end.set({
-            hour: time.endHour ?? time.startHour,
-            minute: time.endHour ? time.endMinute : time.startMinute,
-          }).plus(time.endHour ? {} : { hours: 1 }),
+          end: end
+            .set({
+              hour: time.endHour ?? time.startHour,
+              minute: time.endHour ? time.endMinute : time.startMinute,
+            })
+            .plus(time.endHour ? {} : { hours: 1 }),
           hasTime: true,
         }));
       } else {
@@ -346,48 +356,64 @@ const REGEXES = [
   },
   {
     name: "filteredReversedDateAndTime",
-    regex: new RegExp(`${FILTER_REGEX} ${TIME_REGEX} ${DATE_REGEX}(?=\\.|:|/| )`, "g"),
+    regex: new RegExp(
+      `${FILTER_REGEX} ${TIME_REGEX} ${DATE_REGEX}(?=\\.|:|/| )`,
+      "g"
+    ),
     getData: (match, relativeDate) => {
-      const [filterString, timeString, dateString] = match.split(/(?<! thru) (?!thru )/);
+      const [filterString, timeString, dateString] =
+        match.split(/(?<! thru) (?!thru )/);
 
       const { filter } = FILTERS.find(({ key }) => filterString === key);
       const time = parseTime(timeString);
       const dates = parseDateAsRange(dateString, relativeDate);
 
-      return dates.filter(({ start }) => filter(start)).map(({ start, end }) => ({
-        start: start.set({
-          hour: time.startHour,
-          minute: time.startMinute,
-        }),
-        end: end.set({
-          hour: time.endHour ?? time.startHour,
-          minute: time.endHour ? time.endMinute : time.startMinute,
-        }).plus(time.endHour ? {} : { hours: 1 }),
-        hasTime: true,
-      }));
+      return dates
+        .filter(({ start }) => filter(start))
+        .map(({ start, end }) => ({
+          start: start.set({
+            hour: time.startHour,
+            minute: time.startMinute,
+          }),
+          end: end
+            .set({
+              hour: time.endHour ?? time.startHour,
+              minute: time.endHour ? time.endMinute : time.startMinute,
+            })
+            .plus(time.endHour ? {} : { hours: 1 }),
+          hasTime: true,
+        }));
     },
   },
   {
     name: "filteredBasicDateAndTime",
-    regex: new RegExp(`${FILTER_REGEX} ${DATE_REGEX} ${TIME_REGEX}(?=\\.|:|/| )`, "g"),
+    regex: new RegExp(
+      `${FILTER_REGEX} ${DATE_REGEX} ${TIME_REGEX}(?=\\.|:|/| )`,
+      "g"
+    ),
     getData: (match, relativeDate) => {
-      const [filterString, dateString, timeString] = match.split(/(?<! thru) (?!thru )/);
+      const [filterString, dateString, timeString] =
+        match.split(/(?<! thru) (?!thru )/);
 
       const { filter } = FILTERS.find(({ key }) => filterString === key);
       const time = parseTime(timeString);
       const dates = parseDateAsRange(dateString, relativeDate);
 
-      return dates.filter(({ start }) => filter(start)).map(({ start, end }) => ({
-        start: start.set({
-          hour: time.startHour,
-          minute: time.startMinute,
-        }),
-        end: end.set({
-          hour: time.endHour ?? time.startHour,
-          minute: time.endHour ? time.endMinute : time.startMinute,
-        }).plus(time.endHour ? {} : { hours: 1 }),
-        hasTime: true,
-      }));
+      return dates
+        .filter(({ start }) => filter(start))
+        .map(({ start, end }) => ({
+          start: start.set({
+            hour: time.startHour,
+            minute: time.startMinute,
+          }),
+          end: end
+            .set({
+              hour: time.endHour ?? time.startHour,
+              minute: time.endHour ? time.endMinute : time.startMinute,
+            })
+            .plus(time.endHour ? {} : { hours: 1 }),
+          hasTime: true,
+        }));
     },
   },
   {
@@ -404,10 +430,12 @@ const REGEXES = [
           hour: time.startHour,
           minute: time.startMinute,
         }),
-        end: end.set({
-          hour: time.endHour ?? time.startHour,
-          minute: time.endHour ? time.endMinute : time.startMinute,
-        }).plus(time.endHour ? {} : { hours: 1 }),
+        end: end
+          .set({
+            hour: time.endHour ?? time.startHour,
+            minute: time.endHour ? time.endMinute : time.startMinute,
+          })
+          .plus(time.endHour ? {} : { hours: 1 }),
         hasTime: true,
       }));
     },
@@ -428,10 +456,12 @@ const REGEXES = [
             hour: time.startHour,
             minute: time.startMinute,
           }),
-          end: end.set({
-            hour: time.endHour ?? time.startHour,
-            minute: time.endHour ? time.endMinute : time.startMinute,
-          }).plus(time.endHour ? {} : { hours: 1 }),
+          end: end
+            .set({
+              hour: time.endHour ?? time.startHour,
+              minute: time.endHour ? time.endMinute : time.startMinute,
+            })
+            .plus(time.endHour ? {} : { hours: 1 }),
           hasTime: true,
         }));
       } else {
@@ -478,13 +508,22 @@ const parseDateTime = (nodeText, relativeDate) => {
  */
 export const parseNode = (node, relativeDate) => {
   if (node.tagName !== "P") {
-    console.error("Unexpected tag");
+    console.warn({
+      msg: "Unexpected tag, skipping",
+      expectedTag: "P",
+      tag: node.tagName,
+      textContent: node.textContent,
+    });
     return null;
   }
 
   const titleNode = node.querySelector("b");
   if (!titleNode) {
-    console.error("No title node found");
+    console.warn({
+      msg: "No title node found, skipping",
+      textContent: node.textContent,
+      outerHtml: node.outerHTML,
+    });
     return null;
   }
 
@@ -498,7 +537,14 @@ export const parseNode = (node, relativeDate) => {
 
   return dateTimes.map(({ start, end, hasTime, debug }) => {
     if (!start) {
-      console.error("No start found");
+      console.error({
+        msg: "No start date/time found",
+        textContent: node.textContent,
+        start,
+        end,
+        hasTime,
+        debug,
+      });
       return null;
     }
 

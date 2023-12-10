@@ -75,11 +75,45 @@ const main = async () => {
     );
   }
 
-  for (const event of parsedEvents) {
-    process.env.LIVE === "true"
-      ? await event.createCalendarEvent(auth)
-      : await event.logCalendarEvent();
-  }
+  const responses = await Promise.allSettled(
+    parsedEvents.map(async (event) => {
+      console.info({
+        msg: "Processing event",
+        event,
+      });
+
+      if (process.env.LIVE === "true") {
+        const existingEvent = await event.findMatchingCalendarEvent(auth);
+        if (existingEvent) {
+          console.info({
+            msg: "Event already exists",
+            existingEvent,
+          });
+          return false;
+        } else {
+          console.info({
+            msg: "Event doesn't exist, creating",
+            event,
+          });
+          const createdEvent = await event.createCalendarEvent(auth);
+          console.info({
+            msg: "Created event",
+            createdEvent,
+          });
+          return true;
+        }
+      } else {
+        await event.logCalendarEvent();
+        return false;
+      }
+    })
+  );
+
+  console.info({
+    msg: "Done creating events",
+    createdEvents: responses.filter(({ value: eventCreated }) => eventCreated)
+      .length,
+  });
 };
 
 main();
