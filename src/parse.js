@@ -390,7 +390,7 @@ export const parseNode = (node, relativeDate) => {
   const nodeText = node.textContent;
 
   const location = nodeText.match(
-    /(\. | to | at |: )(?<location>((?!\. |featuring| to | at |: ).)*? \([a-z ]*?\))/
+    /(\. |[^\w]to |[^\w]at |: )(?<location>((?!\. |featuring|[^\w]to[^\w]|[^\w]at[^\w]|: ).)*? \([a-z ]*?\))/
   );
   const link = node.querySelector("a");
   const dateTimes = parseDateTime(nodeText, relativeDate);
