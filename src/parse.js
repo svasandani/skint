@@ -86,79 +86,79 @@ const parseDate = (dateString, relativeDate) => {
     startString = dateString;
   }
 
-  const dateType = startString.includes("/") ? "month_day" : "day_of_week";
+  const startDateType = startString.includes("/") ? "month_day" : "day_of_week";
 
-  if (dateType === "month_day") {
+  let startDate, endDate;
+  if (startDateType === "month_day") {
     const [startMonth, startDay] = startString.split("/");
 
-    const response = {
-      startYear:
+    startDate = DateTime.fromObject({
+      year:
         relativeDate.year + (parseInt(startMonth) < relativeDate.month ? 1 : 0),
-      startMonth: parseInt(startMonth),
-      startDay: parseInt(startDay),
-      endYear:
-        relativeDate.year + (parseInt(startMonth) < relativeDate.month ? 1 : 0),
-      endMonth: parseInt(startMonth),
-      endDay: parseInt(startDay),
-    };
-
-    if (endString) {
-      let endMonth, endDay;
-
-      if (endString.includes("/")) {
-        [endMonth, endDay] = endString.split("/");
-      } else {
-        endMonth = startMonth;
-        endDay = endString;
-      }
-
-      response.endYear =
-        relativeDate.year + (parseInt(endMonth) < relativeDate.month ? 1 : 0);
-      response.endMonth = parseInt(endMonth);
-      response.endDay = parseInt(endDay);
-    }
-
-    return response;
-  } else if (dateType === "day_of_week") {
+      month: parseInt(startMonth),
+      day: parseInt(startDay),
+    });
+    endDate = startDate;
+  } else if (startDateType === "day_of_week") {
     const startDayOfWeek = DAYS_OF_WEEK.indexOf(startString) + 1;
     if (startDayOfWeek < 0) {
       throw new Error({ msg: "Unexpected day of week", dateString });
     }
 
     const dayDelta = (7 + startDayOfWeek - relativeDate.weekday) % 7;
-    const startDate = relativeDate.plus({ days: dayDelta - 1 });
+    startDate = relativeDate.plus({ days: dayDelta - 1 });
+    endDate = startDate;
+  }
 
-    const response = {
-      startYear: startDate.year,
-      startMonth: startDate.month,
-      startDay: startDate.day,
-      endYear: startDate.year,
-      endMonth: startDate.month,
-      endDay: startDate.day,
-    };
+  if (endString) {
+    const endDateType =
+      startDateType === "month_day"
+        ? "month_day"
+        : endString.includes("/")
+        ? "month_day"
+        : "day_of_week";
 
-    if (endString) {
+    if (endDateType === "month_day") {
+      let endMonth, endDay;
+
+      if (endString.includes("/")) {
+        [endMonth, endDay] = endString.split("/");
+      } else {
+        endMonth = "" + startDate.month;
+        endDay = endString;
+      }
+
+      endDate = DateTime.fromObject({
+        year:
+          relativeDate.year + (parseInt(endMonth) < relativeDate.month ? 1 : 0),
+        month: parseInt(endMonth),
+        day: parseInt(endDay),
+      }).plus({ days: 1 });
+    } else if (endDateType === "day_of_week") {
       const endDayOfWeek = DAYS_OF_WEEK.indexOf(endString) + 1;
       if (endDayOfWeek < 0) {
         throw new Error({ msg: "Unexpected day of week", dateString });
       }
 
       const dayDelta = (7 + endDayOfWeek - relativeDate.weekday) % 7;
-      const endDate = relativeDate.plus({ days: dayDelta - 1 });
-
-      response.endYear = endDate.year;
-      response.endMonth = endDate.month;
-      response.endDay = endDate.day;
+      endDate = relativeDate.plus({ days: dayDelta });
     }
-
-    return response;
   }
+
+  return {
+    startYear: startDate.year,
+    startMonth: startDate.month,
+    startDay: startDate.day,
+    endYear: endDate.year,
+    endMonth: endDate.month,
+    endDay: endDate.day,
+  };
 };
 
 /**
- * 
- * @param {string} dateString 
- * @param DateTime relativeDate 
+ *
+ * @param {string} dateString
+ * @param DateTime relativeDate
  * @returns {{ startYear: number, startMonth: number, startDay: number, endYear: number, endMonth: number, endDay: number }[]}
  */
 const parseDateAsRange = (dateString, relativeDate) => {
@@ -177,7 +177,7 @@ const parseDateAsRange = (dateString, relativeDate) => {
       year: parsedEndDate.startYear,
       month: parsedEndDate.startMonth,
       day: parsedEndDate.startDay,
-    })
+    });
     const delta = endDate.diff(startDate, "days").days;
 
     return new Array(delta + 1).fill(0).map((_, index) => {
@@ -208,7 +208,7 @@ const parseDateAsRange = (dateString, relativeDate) => {
       year: parsedEndDate.startYear,
       month: parsedEndDate.startMonth,
       day: parsedEndDate.startDay,
-    })
+    });
     const delta = endDate.diff(startDate, "days").days;
 
     return new Array(delta + 1).fill(0).map((_, index) => {
@@ -226,19 +226,22 @@ const parseDateAsRange = (dateString, relativeDate) => {
   } else {
     return [parseDate(dateString, relativeDate)];
   }
-}
+};
 
-const DAYS_OF_WEEK = ["sun", "mon", "tues", "weds", "thurs", "fri", "sat"];
-const DAY_OF_WEEK_REGEX = `(${DAYS_OF_WEEK.join("|")})((-| thru )${DAYS_OF_WEEK.join(
-  "|"
-)})?`;
-const MONTH_DAY_REGEX = `\\d{1,2}/\\d{1,2}((-| thru )\\d{1,2}(/\\d{1,2})?)?`;
-const DATE_REGEX = `(${DAY_OF_WEEK_REGEX}|${MONTH_DAY_REGEX})`;
+const DAYS_OF_WEEK = ["mon", "tues", "weds", "thurs", "fri", "sat", "sun"];
+const DAY_OF_WEEK_REGEX = `(${DAYS_OF_WEEK.join("|")})`;
+const MONTH_DAY_FIRST_REGEX = `\\d{1,2}/\\d{1,2}`;
+const MONTH_DAY_LAST_REGEX = `\\d{0,2}/?\\d{1,2}`;
+const DATE_REGEX = `(${DAY_OF_WEEK_REGEX}|${MONTH_DAY_FIRST_REGEX})((-| thru )(${DAY_OF_WEEK_REGEX}|${MONTH_DAY_LAST_REGEX}))?`;
 const TIME_REGEX = "\\(?[\\d:]+?(am|pm)?(-[\\d:]+?)?(am|pm)\\)?";
 
 const REGEXES = [
   {
-    regex: new RegExp(`thru ${DATE_REGEX}(\\.|:| )`, "g"),
+    name: "nowThruFutureDate",
+    regex: new RegExp(
+      `(?<!${DATE_REGEX} )thru ${DATE_REGEX}(?=\\.|:|/| )`,
+      "g"
+    ),
     getData: (match, relativeDate) => {
       const date = parseDate(match, relativeDate);
 
@@ -260,72 +263,78 @@ const REGEXES = [
     },
   },
   {
+    name: "dateAndMultipleTimes",
     regex: new RegExp(`${DATE_REGEX} ${TIME_REGEX} \\+ ${TIME_REGEX}`, "g"),
     getData: (match, relativeDate) => {
       const [dateAndFirstTimeString, secondTimeString] = match.split(" + ");
-      const [dateString, firstTimeString] = dateAndFirstTimeString.split(/(?<! thru) (?!thru )/);
+      const [dateString, firstTimeString] =
+        dateAndFirstTimeString.split(/(?<! thru) (?!thru )/);
 
       const dates = parseDateAsRange(dateString, relativeDate);
       const firstTime = parseTime(firstTimeString);
       const secondTime = parseTime(secondTimeString);
 
-      return dates.map((date) => [
-        {
-          start: DateTime.fromObject({
-            year: date.startYear,
-            month: date.startMonth,
-            day: date.startDay,
-            hour: firstTime.startHour,
-            minute: firstTime.startMinute,
-          }),
-          end: DateTime.fromObject({
-            year: date.endYear,
-            month: date.endMonth,
-            day: date.endDay,
-            hour: firstTime?.endHour ?? firstTime.startHour,
-            minute: firstTime?.endHour
-              ? firstTime?.endMinute
-              : firstTime.startMinute,
-          }).plus(firstTime?.endHour ? {} : { hours: 1 }),
-          hasTime: true,
-        },
-        {
-          start: DateTime.fromObject({
-            year: date.startYear,
-            month: date.startMonth,
-            day: date.startDay,
-            hour: secondTime.startHour,
-            minute: secondTime.startMinute,
-          }),
-          end: DateTime.fromObject({
-            year: date.endYear,
-            month: date.endMonth,
-            day: date.endDay,
-            hour: secondTime?.endHour ?? secondTime.startHour,
-            minute: secondTime?.endHour
-              ? secondTime?.endMinute
-              : secondTime.startMinute,
-          }).plus(secondTime?.endHour ? {} : { hours: 1 }),
-          hasTime: true,
-        },
-      ]).flat();
+      return dates
+        .map((date) => [
+          {
+            start: DateTime.fromObject({
+              year: date.startYear,
+              month: date.startMonth,
+              day: date.startDay,
+              hour: firstTime.startHour,
+              minute: firstTime.startMinute,
+            }),
+            end: DateTime.fromObject({
+              year: date.endYear,
+              month: date.endMonth,
+              day: date.endDay,
+              hour: firstTime?.endHour ?? firstTime.startHour,
+              minute: firstTime?.endHour
+                ? firstTime?.endMinute
+                : firstTime.startMinute,
+            }).plus(firstTime?.endHour ? {} : { hours: 1 }),
+            hasTime: true,
+          },
+          {
+            start: DateTime.fromObject({
+              year: date.startYear,
+              month: date.startMonth,
+              day: date.startDay,
+              hour: secondTime.startHour,
+              minute: secondTime.startMinute,
+            }),
+            end: DateTime.fromObject({
+              year: date.endYear,
+              month: date.endMonth,
+              day: date.endDay,
+              hour: secondTime?.endHour ?? secondTime.startHour,
+              minute: secondTime?.endHour
+                ? secondTime?.endMinute
+                : secondTime.startMinute,
+            }).plus(secondTime?.endHour ? {} : { hours: 1 }),
+            hasTime: true,
+          },
+        ])
+        .flat();
     },
   },
   {
+    name: "multipleDatesAndTime",
     regex: new RegExp(
-      `${DATE_REGEX} \\+ ${DAY_OF_WEEK_REGEX}(\\.|:| ${TIME_REGEX})?`,
+      `${DATE_REGEX} \\+ ${DATE_REGEX}( ${TIME_REGEX})?(?=\\.|:|/| )`,
       "g"
     ),
     getData: (match, relativeDate) => {
       const [firstDateString, secondDateAndTimeString] = match.split(" + ");
-      const [secondDateString, timeString] = secondDateAndTimeString.split(/(?<! thru) (?!thru )/);
+      const [secondDateString, timeString] =
+        secondDateAndTimeString.split(/(?<! thru) (?!thru )/);
 
       const time = timeString ? parseTime(timeString) : undefined;
 
       if (time) {
         const firstDates = parseDateAsRange(firstDateString, relativeDate);
         const secondDates = parseDateAsRange(secondDateString, relativeDate);
-  
+
         return [...firstDates, ...secondDates].map((date) => ({
           start: DateTime.fromObject({
             year: date.startYear,
@@ -346,23 +355,19 @@ const REGEXES = [
       } else {
         const firstDate = parseDate(firstDateString, relativeDate);
         const secondDate = parseDate(secondDateString, relativeDate);
-  
+
         return [
           {
             start: DateTime.fromObject({
               year: firstDate.startYear,
               month: firstDate.startMonth,
               day: firstDate.startDay,
-              hour: time?.startHour,
-              minute: time?.startMinute,
             }),
             end: DateTime.fromObject({
               year: firstDate.endYear,
               month: firstDate.endMonth,
               day: firstDate.endDay,
-              hour: time?.endHour ?? time?.startHour,
-              minute: time?.endHour ? time?.endMinute : time?.startMinute,
-            }).plus(time?.endHour ? {} : { hours: 1 }),
+            }),
             hasTime: false,
           },
           {
@@ -370,24 +375,21 @@ const REGEXES = [
               year: secondDate.startYear,
               month: secondDate.startMonth,
               day: secondDate.startDay,
-              hour: time?.startHour,
-              minute: time?.startMinute,
             }),
             end: DateTime.fromObject({
               year: secondDate.endYear,
               month: secondDate.endMonth,
               day: secondDate.endDay,
-              hour: time?.endHour ?? time?.startHour,
-              minute: time?.endHour ? time?.endMinute : time?.startMinute,
-            }).plus(time?.endHour ? {} : { hours: 1 }),
+            }),
             hasTime: false,
           },
-        ]
+        ];
       }
     },
   },
   {
-    regex: new RegExp(`${DATE_REGEX}(\\.|:| ${TIME_REGEX})`, "g"),
+    name: "basicDateAndTime",
+    regex: new RegExp(`${DATE_REGEX}( ${TIME_REGEX})?(?=\\.|:|/| )`, "g"),
     getData: (match, relativeDate) => {
       const [dateString, timeString] = match.split(/(?<! thru) (?!thru )/);
 
@@ -416,26 +418,22 @@ const REGEXES = [
       } else {
         const date = parseDate(dateString, relativeDate);
 
-        return [{
-          start: DateTime.fromObject({
-            year: date.startYear,
-            month: date.startMonth,
-            day: date.startDay,
-            hour: time?.startHour,
-            minute: time?.startMinute,
-          }),
-          end: DateTime.fromObject({
-            year: date.endYear,
-            month: date.endMonth,
-            day: date.endDay,
-            hour: time?.endHour ?? time?.startHour,
-            minute: time?.endHour ? time?.endMinute : time?.startMinute,
-          }).plus(time?.endHour ? {} : { hours: 1 }),
-          hasTime: false,
-        }]
+        return [
+          {
+            start: DateTime.fromObject({
+              year: date.startYear,
+              month: date.startMonth,
+              day: date.startDay,
+            }),
+            end: DateTime.fromObject({
+              year: date.endYear,
+              month: date.endMonth,
+              day: date.endDay,
+            }),
+            hasTime: false,
+          },
+        ];
       }
-
-      
     },
   },
 ];
@@ -447,11 +445,14 @@ const REGEXES = [
  * @returns {{ start: DateTime, end: DateTime, hasTime: boolean }[]}
  */
 const parseDateTime = (nodeText, relativeDate) => {
-  for (const { regex, getData } of REGEXES) {
+  for (const { name, regex, getData } of REGEXES) {
     const matches = nodeText.match(regex);
 
     if (matches && matches.length > 0) {
-      return getData(matches[0], relativeDate);
+      return getData(matches[0], relativeDate).map((result) => ({
+        ...result,
+        debug: { name, matches },
+      }));
     }
   }
 
@@ -484,7 +485,7 @@ export const parseNode = (node, relativeDate) => {
   const link = node.querySelector("a");
   const dateTimes = parseDateTime(nodeText, relativeDate);
 
-  return dateTimes.map(({ start, end, hasTime }) => {
+  return dateTimes.map(({ start, end, hasTime, debug }) => {
     if (!start) {
       console.error("No start found");
       return null;
@@ -496,7 +497,8 @@ export const parseNode = (node, relativeDate) => {
       location?.groups?.location,
       start,
       end,
-      hasTime
+      hasTime,
+      debug
     );
   });
 };

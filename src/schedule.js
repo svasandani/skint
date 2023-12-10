@@ -10,14 +10,16 @@ export class Event {
    * @param {DateTime} start
    * @param {DateTime} [end]
    * @param {boolean} [hasTime=false]
+   * @param {object} [debug]
    */
-  constructor(title, description, location, start, end, hasTime) {
+  constructor(title, description, location, start, end, hasTime, debug) {
     this.title = title;
     this.description = description;
     this.location = location;
     this.start = start;
     this.end = end;
     this.hasTime = hasTime;
+    this.debug = debug;
   }
 
   /**
