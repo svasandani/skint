@@ -1,15 +1,14 @@
 import { DateTime } from "luxon";
 
-import { Event } from "./schedule.js"
+import { Event } from "./schedule.js";
 
 /**
- * 
- * @param {string} timeString 
+ *
+ * @param {string} timeString
  * @returns {{ startHour: number, startMinute: number, endHour?: number, endMinute?: number }}
  */
 const parseTime = (timeStringUnescaped) => {
-  if (!timeStringUnescaped)
-    throw new Error("Expected value missing");
+  if (!timeStringUnescaped) throw new Error("Expected value missing");
 
   const timeString = timeStringUnescaped.replace(/[\(\)]/g, "");
 
@@ -27,7 +26,11 @@ const parseTime = (timeStringUnescaped) => {
     endPeriod = endString.includes("am") ? "am" : "pm";
   }
   if (startString) {
-    startPeriod = startString.includes("am") ? "am" : startString.includes("pm") ? "pm" : undefined;
+    startPeriod = startString.includes("am")
+      ? "am"
+      : startString.includes("pm")
+      ? "pm"
+      : undefined;
   }
 
   let startHour, startMinute;
@@ -47,27 +50,28 @@ const parseTime = (timeStringUnescaped) => {
   }
 
   const response = {
-    startHour: ((12 + parseInt(startHour)) % 12) + (((startPeriod ?? endPeriod) === "am") ? 0 : 12),
+    startHour:
+      ((12 + parseInt(startHour)) % 12) +
+      ((startPeriod ?? endPeriod) === "am" ? 0 : 12),
     startMinute: startMinute ? parseInt(startMinute) : 0,
   };
-  
+
   if (endString) {
-    response.endHour = parseInt(endHour) + ((endPeriod === "am") ? 0 : 12);
+    response.endHour = parseInt(endHour) + (endPeriod === "am" ? 0 : 12);
     response.endMinute = endMinute ? parseInt(endMinute) : 0;
   }
 
   return response;
-}
+};
 
 /**
- * 
- * @param {DateTime} relativeDate 
+ *
+ * @param {DateTime} relativeDate
  * @param {string} dayOfWeekString
  * @returns {{ startYear: number, startMonth: number, startDay: number, endYear: number, endMonth: number, endDay: number }}
  */
 const parseDate = (dateString, relativeDate) => {
-  if (!dateString)
-    throw new Error("Expected value missing");
+  if (!dateString) throw new Error("Expected value missing");
 
   let startString, endString;
 
@@ -86,13 +90,15 @@ const parseDate = (dateString, relativeDate) => {
     const [startMonth, startDay] = startString.split("/");
 
     const response = {
-      startYear: relativeDate.year + (parseInt(startMonth) < relativeDate.month ? 1 : 0),
+      startYear:
+        relativeDate.year + (parseInt(startMonth) < relativeDate.month ? 1 : 0),
       startMonth: parseInt(startMonth),
       startDay: parseInt(startDay),
-      endYear: relativeDate.year + (parseInt(startMonth) < relativeDate.month ? 1 : 0),
+      endYear:
+        relativeDate.year + (parseInt(startMonth) < relativeDate.month ? 1 : 0),
       endMonth: parseInt(startMonth),
       endDay: parseInt(startDay),
-    }
+    };
 
     if (endString) {
       let endMonth, endDay;
@@ -104,7 +110,8 @@ const parseDate = (dateString, relativeDate) => {
         endDay = endString;
       }
 
-      response.endYear = relativeDate.year + (parseInt(endMonth) < relativeDate.month ? 1 : 0);
+      response.endYear =
+        relativeDate.year + (parseInt(endMonth) < relativeDate.month ? 1 : 0);
       response.endMonth = parseInt(endMonth);
       response.endDay = parseInt(endDay);
     }
@@ -139,15 +146,17 @@ const parseDate = (dateString, relativeDate) => {
 
       response.endYear = endDate.year;
       response.endMonth = endDate.month;
-      response.endDay = endDate.day; 
+      response.endDay = endDate.day;
     }
 
     return response;
   }
-}
+};
 
 const DAYS_OF_WEEK = ["sun", "mon", "tues", "weds", "thurs", "fri", "sat"];
-const DAY_OF_WEEK_REGEX = `(${DAYS_OF_WEEK.join("|")})(-${DAYS_OF_WEEK.join("|")})?`;
+const DAY_OF_WEEK_REGEX = `(${DAYS_OF_WEEK.join("|")})(-${DAYS_OF_WEEK.join(
+  "|"
+)})?`;
 const MONTH_DAY_REGEX = `\\d{1,2}/\\d{1,2}(-\\d{1,2}(/\\d{1,2})?)?`;
 const DATE_REGEX = `(${DAY_OF_WEEK_REGEX}|${MONTH_DAY_REGEX})`;
 const TIME_REGEX = "\\(?[\\d:]+?(am|pm)?(-[\\d:]+?)?(am|pm)\\)?";
@@ -158,27 +167,29 @@ const REGEXES = [
     getData: (match, relativeDate) => {
       const date = parseDate(match, relativeDate);
 
-      return [{
-        start: DateTime.fromObject({
-          year: date.startYear,
-          month: date.startMonth,
-          day: date.startDay,
-        }),
-        end: DateTime.fromObject({
-          year: date.endYear,
-          month: date.endMonth,
-          day: date.endDay,
-        }),
-        hasTime: false,
-      }]
-    }
+      return [
+        {
+          start: DateTime.fromObject({
+            year: date.startYear,
+            month: date.startMonth,
+            day: date.startDay,
+          }),
+          end: DateTime.fromObject({
+            year: date.endYear,
+            month: date.endMonth,
+            day: date.endDay,
+          }),
+          hasTime: false,
+        },
+      ];
+    },
   },
   {
     regex: new RegExp(`${DATE_REGEX} ${TIME_REGEX} \\+ ${TIME_REGEX}`, "g"),
     getData: (match, relativeDate) => {
       const [dateAndFirstTimeString, secondTimeString] = match.split(" + ");
       const [dateString, firstTimeString] = dateAndFirstTimeString.split(" ");
-      
+
       const date = parseDate(dateString, relativeDate);
       const firstTime = parseTime(firstTimeString);
       const secondTime = parseTime(secondTimeString);
@@ -197,8 +208,10 @@ const REGEXES = [
             month: date.endMonth,
             day: date.endDay,
             hour: firstTime?.endHour ?? firstTime.startHour,
-            minute: firstTime?.endHour ? firstTime?.endMinute : firstTime.startMinute,
-          }).plus(firstTime?.endHour ? {} : {hour: 1}),
+            minute: firstTime?.endHour
+              ? firstTime?.endMinute
+              : firstTime.startMinute,
+          }).plus(firstTime?.endHour ? {} : { hours: 1 }),
           hasTime: true,
         },
         {
@@ -214,19 +227,24 @@ const REGEXES = [
             month: date.endMonth,
             day: date.endDay,
             hour: secondTime?.endHour ?? secondTime.startHour,
-            minute: secondTime?.endHour ? secondTime?.endMinute : secondTime.startMinute,
-          }).plus(secondTime?.endHour ? {} : {hour: 1}),
+            minute: secondTime?.endHour
+              ? secondTime?.endMinute
+              : secondTime.startMinute,
+          }).plus(secondTime?.endHour ? {} : { hours: 1 }),
           hasTime: true,
         },
-      ]
-    }
+      ];
+    },
   },
   {
-    regex: new RegExp(`${DATE_REGEX} \\+ ${DAY_OF_WEEK_REGEX}(\\.|:| ${TIME_REGEX})?`, "g"),
+    regex: new RegExp(
+      `${DATE_REGEX} \\+ ${DAY_OF_WEEK_REGEX}(\\.|:| ${TIME_REGEX})?`,
+      "g"
+    ),
     getData: (match, relativeDate) => {
       const [firstDateString, secondDateAndTimeString] = match.split(" + ");
       const [secondDateString, timeString] = secondDateAndTimeString.split(" ");
-      
+
       const firstDate = parseDate(firstDateString, relativeDate);
       const secondDate = parseDate(secondDateString, relativeDate);
       const time = timeString ? parseTime(timeString) : undefined;
@@ -246,7 +264,7 @@ const REGEXES = [
             day: firstDate.endDay,
             hour: time?.endHour ?? time?.startHour,
             minute: time?.endHour ? time?.endMinute : time?.startMinute,
-          }).plus(time?.endHour ? {} : {hour: 1}),
+          }).plus(time?.endHour ? {} : { hours: 1 }),
           hasTime: !!time,
         },
         {
@@ -263,11 +281,11 @@ const REGEXES = [
             day: secondDate.endDay,
             hour: time?.endHour ?? time?.startHour,
             minute: time?.endHour ? time?.endMinute : time?.startMinute,
-          }).plus(time?.endHour ? {} : {hour: 1}),
+          }).plus(time?.endHour ? {} : { hours: 1 }),
           hasTime: !!time,
         },
-      ]
-    }
+      ];
+    },
   },
   {
     regex: new RegExp(`${DATE_REGEX}(\\.|:| ${TIME_REGEX})`, "g"),
@@ -277,30 +295,65 @@ const REGEXES = [
       const date = parseDate(dateString, relativeDate);
       const time = timeString ? parseTime(timeString) : undefined;
 
-      return [{
-        start: DateTime.fromObject({
+      if (
+        JSON.stringify([date.endYear, date.endMonth, date.endDay]) ===
+          JSON.stringify([date.startYear, date.startMonth, date.startDay]) ||
+        !time
+      ) {
+        return [
+          {
+            start: DateTime.fromObject({
+              year: date.startYear,
+              month: date.startMonth,
+              day: date.startDay,
+              hour: time?.startHour,
+              minute: time?.startMinute,
+            }),
+            end: DateTime.fromObject({
+              year: date.endYear,
+              month: date.endMonth,
+              day: date.endDay,
+              hour: time?.endHour ?? time?.startHour,
+              minute: time?.endHour ? time?.endMinute : time?.startMinute,
+            }).plus(time?.endHour ? {} : { hours: 1 }),
+            hasTime: !!time,
+          },
+        ];
+      } else {
+        const start = DateTime.fromObject({
           year: date.startYear,
           month: date.startMonth,
           day: date.startDay,
-          hour: time?.startHour,
-          minute: time?.startMinute,
-        }),
-        end: DateTime.fromObject({
+        });
+        const end = DateTime.fromObject({
           year: date.endYear,
           month: date.endMonth,
           day: date.endDay,
-          hour: time?.endHour ?? time?.startHour,
-          minute: time?.endHour ? time?.endMinute : time?.startMinute,
-        }).plus(time?.endHour ? {} : {hour: 1}),
-        hasTime: !!time,
-      }]
-    }
+        });
+        const delta = end.diff(start, "days").days;
+
+        return new Array(delta + 1).fill(0).map((_, index) => ({
+          start: start.plus({ days: index }).set({
+            hour: time.startHour,
+            minute: time.startMinute,
+          }),
+          end: start
+            .plus({ days: index })
+            .set({
+              hour: time.endHour ?? time.startHour,
+              minute: time.endHour ? time.endMinute : time.startMinute,
+            })
+            .plus(time.endHour ? {} : { hours: 1 }),
+          hasTime: true,
+        }));
+      }
+    },
   },
-]
+];
 
 /**
  * parseDate parses dates from a string.
- * @param {string} nodeText 
+ * @param {string} nodeText
  * @param {DateTime} relativeDate
  * @returns {{ start: DateTime, end: DateTime, hasTime: boolean }[]}
  */
@@ -314,11 +367,11 @@ const parseDateTime = (nodeText, relativeDate) => {
   }
 
   return [];
-}
+};
 
 /**
  * parseNode parses a single `p` element.
- * @param {Element} node 
+ * @param {Element} node
  * @param {DateTime} relativeDate
  * @returns {Event[]}
  */
@@ -336,7 +389,9 @@ export const parseNode = (node, relativeDate) => {
 
   const nodeText = node.textContent;
 
-  const location = nodeText.match(/(\. | to | at |: )(?<location>((?!\. |featuring| to | at |: ).)*? \([a-z ]*?\))/);
+  const location = nodeText.match(
+    /(\. | to | at |: )(?<location>((?!\. |featuring| to | at |: ).)*? \([a-z ]*?\))/
+  );
   const link = node.querySelector("a");
   const dateTimes = parseDateTime(nodeText, relativeDate);
 
@@ -345,21 +400,21 @@ export const parseNode = (node, relativeDate) => {
       console.error("No start found");
       return null;
     }
-  
+
     return new Event(
       titleNode.textContent,
-      nodeText + (link ? ("\n\n" + link.href) : ""),
+      nodeText + (link ? "\n\n" + link.href : ""),
       location?.groups?.location,
-      start, 
+      start,
       end,
       hasTime
-    )
+    );
   });
-}
+};
 
 /**
- * parseNodes maps a node list into 
- * @param {NodeListOf<Element>} nodes 
+ * parseNodes maps a node list into
+ * @param {NodeListOf<Element>} nodes
  * @param {DateTime} relativeDate
  * @returns {Event[]}
  */
@@ -375,4 +430,4 @@ export const parseNodes = (nodes, relativeDate) => {
   });
 
   return events;
-}
+};

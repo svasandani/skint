@@ -3,10 +3,10 @@ import { DateTime } from "luxon";
 
 export class Event {
   /**
-   * 
-   * @param {string} title 
-   * @param {string} [description] 
-   * @param {string} [location] 
+   *
+   * @param {string} title
+   * @param {string} [description]
+   * @param {string} [location]
    * @param {DateTime} start
    * @param {DateTime} [end]
    * @param {boolean} [hasTime=false]
@@ -21,44 +21,53 @@ export class Event {
   }
 
   /**
-   * 
-   * @param {google.auth.OAuth2} auth 
+   *
+   * @param {google.auth.OAuth2} auth
    */
   async createCalendarEvent(auth) {
     await new Promise((resolve, reject) => {
-      google.calendar("v3").events.insert({
-        auth,
-        calendarId: process.env.GOOGLE_CALENDAR_ID,
-        resource: {
-          "summary": this.title,
-          "location": this.location,
-          "description": this.description,
-          "start": this.hasTime ? {
-            "dateTime": this.start.toISO(),
-            "timeZone": "America/New_York",
-          } : {
-            "date": this.start.toISODate(),
-            "timeZone": "America/New_York",
-          },
-          "end": this.hasTime ? {
-            "dateTime": this.end.toISO(),
-            "timeZone": "America/New_York",
-          } : {
-            "date": this.end.toISODate(),
-            "timeZone": "America/New_York",
-          },
-          "reminders": {
-            "useDefault": true,
+      google.calendar("v3").events.insert(
+        {
+          auth,
+          calendarId: process.env.GOOGLE_CALENDAR_ID,
+          resource: {
+            summary: this.title,
+            location: this.location,
+            description: this.description,
+            start: this.hasTime
+              ? {
+                  dateTime: this.start.toISO(),
+                  timeZone: "America/New_York",
+                }
+              : {
+                  date: this.start.toISODate(),
+                  timeZone: "America/New_York",
+                },
+            end: this.hasTime
+              ? {
+                  dateTime: this.end.toISO(),
+                  timeZone: "America/New_York",
+                }
+              : {
+                  date: this.end.toISODate(),
+                  timeZone: "America/New_York",
+                },
+            reminders: {
+              useDefault: true,
+            },
           },
         },
-      }, function(err, event) {
-        if (err) {
-          console.error("There was an error contacting the Calendar service: " + err);
-          reject(err);
+        function (err, event) {
+          if (err) {
+            console.error(
+              "There was an error contacting the Calendar service: " + err
+            );
+            reject(err);
+          }
+          resolve(event);
         }
-        resolve(event);
-      });
-    })
+      );
+    });
   }
 
   async logCalendarEvent() {
