@@ -242,7 +242,7 @@ const REGEXES = [
   {
     name: "nowThruFutureDate",
     regex: new RegExp(
-      `(?<!${DATE_REGEX} )thru ${DATE_REGEX}(?=\\.|:|/| )`,
+      `(?<!${DATE_REGEX} )thru ${DATE_REGEX}(?=\\.|:|;|/| )`,
       "g"
     ),
     getData: (match, relativeDate) => {
@@ -308,7 +308,7 @@ const REGEXES = [
   {
     name: "multipleDatesAndTime",
     regex: new RegExp(
-      `${DATE_REGEX} \\+ ${DATE_REGEX}( ${TIME_REGEX})?(?=\\.|:|/| )`,
+      `${DATE_REGEX} \\+ ${DATE_REGEX}( ${TIME_REGEX})?(?=\\.|:|;|/| )`,
       "g"
     ),
     getData: (match, relativeDate) => {
@@ -357,7 +357,7 @@ const REGEXES = [
   {
     name: "filteredReversedDateAndTime",
     regex: new RegExp(
-      `${FILTER_REGEX} ${TIME_REGEX} ${DATE_REGEX}(?=\\.|:|/| )`,
+      `${FILTER_REGEX} ${TIME_REGEX} ${DATE_REGEX}(?=\\.|:|;|/| )`,
       "g"
     ),
     getData: (match, relativeDate) => {
@@ -388,7 +388,7 @@ const REGEXES = [
   {
     name: "filteredBasicDateAndTime",
     regex: new RegExp(
-      `${FILTER_REGEX} ${DATE_REGEX} ${TIME_REGEX}(?=\\.|:|/| )`,
+      `${FILTER_REGEX} ${DATE_REGEX} ${TIME_REGEX}(?=\\.|:|;|/| )`,
       "g"
     ),
     getData: (match, relativeDate) => {
@@ -418,7 +418,7 @@ const REGEXES = [
   },
   {
     name: "reversedDateAndTime",
-    regex: new RegExp(`${TIME_REGEX} ${DATE_REGEX}(?=\\.|:|/| )`, "g"),
+    regex: new RegExp(`${TIME_REGEX} ${DATE_REGEX}(?=\\.|:|;|/| )`, "g"),
     getData: (match, relativeDate) => {
       const [timeString, dateString] = match.split(/(?<! thru) (?!thru )/);
 
@@ -442,7 +442,7 @@ const REGEXES = [
   },
   {
     name: "basicDateAndTime",
-    regex: new RegExp(`${DATE_REGEX}( ${TIME_REGEX})?(?=\\.|:|/| )`, "g"),
+    regex: new RegExp(`${DATE_REGEX}( ${TIME_REGEX})?(?=\\.|:|;|/| )`, "g"),
     getData: (match, relativeDate) => {
       const [dateString, timeString] = match.split(/(?<! thru) (?!thru )/);
 
