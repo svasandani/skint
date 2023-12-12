@@ -492,7 +492,7 @@ const parseDateTime = (nodeText, relativeDate) => {
     if (matches && matches.length > 0) {
       return getData(matches[0], relativeDate).map((result) => ({
         ...result,
-        debug: { name, matches },
+        debug: { name, dateTimeMatches: matches },
       }));
     }
   }
@@ -530,7 +530,7 @@ export const parseNode = (node, relativeDate) => {
   const nodeText = node.textContent;
 
   const location = nodeText.match(
-    /(\. |\bto |\bat |: )\b(?<location>((?!\. |\bfeaturing\b|\bto\b|\bat\b|: ).)*?\b \([a-z ]*?\))/
+    /(\.\W|:\W|\bto\W+|\bat\W+|\bin\W+)\b(?<location>((?!\.\W|:\W|\bhost|\bfeatur|\bto\b|\bat\b|\bin\b).)*?\b \([a-z ]*?\))/
   );
   const link = node.querySelector("a");
   const dateTimes = parseDateTime(nodeText, relativeDate);
@@ -555,7 +555,7 @@ export const parseNode = (node, relativeDate) => {
       start,
       end,
       hasTime,
-      debug
+      { ...debug, locationMatches: location }
     );
   });
 };
