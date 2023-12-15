@@ -51,7 +51,6 @@ export class Event {
             events.find(
               (event) =>
                 event.summary === thisEvent.title &&
-                event.description === thisEvent.description &&
                 event.location === thisEvent.location &&
                 (event.start.date === thisEvent.start.toISODate() ||
                   event.start.dateTime ===
