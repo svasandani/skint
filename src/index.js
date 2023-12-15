@@ -55,7 +55,7 @@ const main = async () => {
 
         parsedEvents = parseNodes(
           pNodes,
-          DateTime.fromJSDate(new Date(xmlPubDate.textContent))
+          DateTime.fromJSDate(new Date(xmlPubDate.textContent)).set({ second: 0, millisecond: 0 })
         );
       }
     }
@@ -71,7 +71,7 @@ const main = async () => {
 
     parsedEvents = parseNodes(
       pNodes,
-      DateTime.fromJSDate(new Date(relativeDate))
+      DateTime.fromJSDate(new Date(relativeDate)).set({ second: 0, millisecond: 0 })
     );
   }
 

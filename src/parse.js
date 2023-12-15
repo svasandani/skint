@@ -99,6 +99,8 @@ const parseDate = (dateString, relativeDate) => {
       day: parseInt(startDay),
       hour: 12,
       minute: 0,
+      second: 0,
+      millisecond: 0,
     });
     endDate = startDate;
   } else if (startDateType === "day_of_week") {
@@ -139,6 +141,8 @@ const parseDate = (dateString, relativeDate) => {
         day: parseInt(endDay),
         hour: 12,
         minute: 0,
+        second: 0,
+        millisecond: 0,
       });
     } else if (endDateType === "day_of_week") {
       const endDayOfWeek = DAYS_OF_WEEK.indexOf(endString) + 1;
