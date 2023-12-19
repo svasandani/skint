@@ -5,7 +5,7 @@ import { Event } from "./schedule.js";
 /**
  *
  * @param {string} timeString
- * @returns {{ startHour: number, startMinute: number, endHour?: number, endMinute?: number }}
+ * @returns {{ carryDay: boolean, startHour: number, startMinute: number, endHour?: number, endMinute?: number }}
  */
 const parseTime = (timeStringUnescaped) => {
   if (!timeStringUnescaped) throw new Error("Expected value missing");
@@ -50,6 +50,7 @@ const parseTime = (timeStringUnescaped) => {
   }
 
   const response = {
+    carryDay: false,
     startHour:
       ((12 + parseInt(startHour)) % 12) +
       ((startPeriod ?? endPeriod) === "am" ? 0 : 12),
@@ -59,6 +60,7 @@ const parseTime = (timeStringUnescaped) => {
   if (endString) {
     response.endHour = parseInt(endHour) + (endPeriod === "am" ? 0 : 12);
     response.endMinute = endMinute ? parseInt(endMinute) : 0;
+    response.carryDay = response.endHour < response.startHour || (response.endHour === response.startHour && response.endMinute < response.startMinute);
   }
 
   return response;
@@ -287,7 +289,8 @@ const REGEXES = [
                   ? firstTime.endMinute
                   : firstTime.startMinute,
               })
-              .plus(firstTime.endHour ? {} : { hours: 1 }),
+              .plus(firstTime.endHour ? {} : { hours: 1 })
+              .plus(firstTime.carryDay ? { days: 1 } : {}),
             hasTime: true,
           },
           {
@@ -302,7 +305,8 @@ const REGEXES = [
                   ? secondTime.endMinute
                   : secondTime.startMinute,
               })
-              .plus(secondTime.endHour ? {} : { hours: 1 }),
+              .plus(secondTime.endHour ? {} : { hours: 1 })
+              .plus(secondTime.carryDay ? { days: 1 } : {}),
             hasTime: true,
           },
         ])
@@ -336,7 +340,8 @@ const REGEXES = [
               hour: time.endHour ?? time.startHour,
               minute: time.endHour ? time.endMinute : time.startMinute,
             })
-            .plus(time.endHour ? {} : { hours: 1 }),
+            .plus(time.endHour ? {} : { hours: 1 })
+            .plus(time.carryDay ? { days: 1 } : {}),
           hasTime: true,
         }));
       } else {
@@ -384,7 +389,8 @@ const REGEXES = [
               hour: time.endHour ?? time.startHour,
               minute: time.endHour ? time.endMinute : time.startMinute,
             })
-            .plus(time.endHour ? {} : { hours: 1 }),
+            .plus(time.endHour ? {} : { hours: 1 })
+            .plus(time.carryDay ? { days: 1 } : {}),
           hasTime: true,
         }));
     },
@@ -415,7 +421,8 @@ const REGEXES = [
               hour: time.endHour ?? time.startHour,
               minute: time.endHour ? time.endMinute : time.startMinute,
             })
-            .plus(time.endHour ? {} : { hours: 1 }),
+            .plus(time.endHour ? {} : { hours: 1 })
+            .plus(time.carryDay ? { days: 1 } : {}),
           hasTime: true,
         }));
     },
@@ -439,7 +446,8 @@ const REGEXES = [
             hour: time.endHour ?? time.startHour,
             minute: time.endHour ? time.endMinute : time.startMinute,
           })
-          .plus(time.endHour ? {} : { hours: 1 }),
+          .plus(time.endHour ? {} : { hours: 1 })
+          .plus(time.carryDay ? { days: 1 } : {}),
         hasTime: true,
       }));
     },
@@ -465,7 +473,8 @@ const REGEXES = [
               hour: time.endHour ?? time.startHour,
               minute: time.endHour ? time.endMinute : time.startMinute,
             })
-            .plus(time.endHour ? {} : { hours: 1 }),
+            .plus(time.endHour ? {} : { hours: 1 })
+            .plus(time.carryDay ? { days: 1 } : {}),
           hasTime: true,
         }));
       } else {
