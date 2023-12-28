@@ -58,7 +58,7 @@ const parseTime = (timeStringUnescaped) => {
   };
 
   if (endString) {
-    response.endHour = parseInt(endHour) + (endPeriod === "am" ? 0 : 12);
+    response.endHour = ((12 + parseInt(endHour)) % 12) + (endPeriod === "am" ? 0 : 12);
     response.endMinute = endMinute ? parseInt(endMinute) : 0;
     response.carryDay = response.endHour < response.startHour || (response.endHour === response.startHour && response.endMinute < response.startMinute);
   }
@@ -289,7 +289,7 @@ const REGEXES = [
                   ? firstTime.endMinute
                   : firstTime.startMinute,
               })
-              .plus(firstTime.endHour ? {} : { hours: 1 })
+              .plus(typeof firstTime.endHour !== "undefined" ? {} : { hours: 1 })
               .plus(firstTime.carryDay ? { days: 1 } : {}),
             hasTime: true,
           },
@@ -305,7 +305,7 @@ const REGEXES = [
                   ? secondTime.endMinute
                   : secondTime.startMinute,
               })
-              .plus(secondTime.endHour ? {} : { hours: 1 })
+              .plus(typeof secondTime.endHour !== "undefined" ? {} : { hours: 1 })
               .plus(secondTime.carryDay ? { days: 1 } : {}),
             hasTime: true,
           },
@@ -338,9 +338,9 @@ const REGEXES = [
           end: end
             .set({
               hour: time.endHour ?? time.startHour,
-              minute: time.endHour ? time.endMinute : time.startMinute,
+              minute: typeof time.endHour !== "undefined" ? time.endMinute : time.startMinute,
             })
-            .plus(time.endHour ? {} : { hours: 1 })
+            .plus(typeof time.endHour !== "undefined" ? {} : { hours: 1 })
             .plus(time.carryDay ? { days: 1 } : {}),
           hasTime: true,
         }));
@@ -387,9 +387,9 @@ const REGEXES = [
           end: end
             .set({
               hour: time.endHour ?? time.startHour,
-              minute: time.endHour ? time.endMinute : time.startMinute,
+              minute: typeof time.endHour !== "undefined" ? time.endMinute : time.startMinute,
             })
-            .plus(time.endHour ? {} : { hours: 1 })
+            .plus(typeof time.endHour !== "undefined" ? {} : { hours: 1 })
             .plus(time.carryDay ? { days: 1 } : {}),
           hasTime: true,
         }));
@@ -419,9 +419,9 @@ const REGEXES = [
           end: end
             .set({
               hour: time.endHour ?? time.startHour,
-              minute: time.endHour ? time.endMinute : time.startMinute,
+              minute: typeof time.endHour !== "undefined" ? time.endMinute : time.startMinute,
             })
-            .plus(time.endHour ? {} : { hours: 1 })
+            .plus(typeof time.endHour !== "undefined" ? {} : { hours: 1 })
             .plus(time.carryDay ? { days: 1 } : {}),
           hasTime: true,
         }));
@@ -444,9 +444,9 @@ const REGEXES = [
         end: end
           .set({
             hour: time.endHour ?? time.startHour,
-            minute: time.endHour ? time.endMinute : time.startMinute,
+            minute: typeof time.endHour !== "undefined" ? time.endMinute : time.startMinute,
           })
-          .plus(time.endHour ? {} : { hours: 1 })
+          .plus(typeof time.endHour !== "undefined" ? {} : { hours: 1 })
           .plus(time.carryDay ? { days: 1 } : {}),
         hasTime: true,
       }));
@@ -471,9 +471,9 @@ const REGEXES = [
           end: end
             .set({
               hour: time.endHour ?? time.startHour,
-              minute: time.endHour ? time.endMinute : time.startMinute,
+              minute: typeof time.endHour !== "undefined" ? time.endMinute : time.startMinute,
             })
-            .plus(time.endHour ? {} : { hours: 1 })
+            .plus(typeof time.endHour !== "undefined" ? {} : { hours: 1 })
             .plus(time.carryDay ? { days: 1 } : {}),
           hasTime: true,
         }));
