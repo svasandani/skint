@@ -78,7 +78,7 @@ const parseDate = (dateString, relativeDate) => {
   let startString, endString;
 
   if (dateString.match(/^thru/)) {
-    startString = `${relativeDate.month}/${relativeDate.day}`;
+    startString = DAYS_OF_WEEK[relativeDate.weekday];
     endString = dateString.split("thru ")[1];
   } else if (dateString.includes(" thru ")) {
     [startString, endString] = dateString.split(" thru ");
@@ -154,7 +154,7 @@ const parseDate = (dateString, relativeDate) => {
 
       const dayDelta = (7 + endDayOfWeek - relativeDate.weekday) % 7;
       endDate = relativeDate
-        .plus({ days: dayDelta - 1 })
+        .plus({ days: dayDelta })
         .set({ hour: 12, minute: 0 });
     }
   }
