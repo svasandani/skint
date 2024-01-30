@@ -156,6 +156,15 @@ const parseDate = (dateString, relativeDate) => {
       endDate = relativeDate
         .plus({ days: dayDelta })
         .set({ hour: 12, minute: 0 });
+
+      while (endDate < startDate) {
+        /**
+         * If somehow endDate is before startDate and endDate is a day of week,
+         * we likely used the wrong relativeDate. We'll keep adding weeks
+         * until the problem is resolved.
+         */
+        endDate = endDate.plus({ days: 7 });
+      }
     }
   }
 
