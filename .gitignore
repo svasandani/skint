@@ -132,3 +132,6 @@ dist
 # secrets
 credentials.json
 token.json
+
+# data
+nonsense.txt
