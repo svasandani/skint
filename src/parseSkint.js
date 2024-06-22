@@ -577,6 +577,7 @@ export const parseNode = (node, relativeDate) => {
       start,
       end,
       hasTime,
+      { title: "the skint", url: "https://theskint.com/" },
       { ...debug, locationMatches: location }
     );
   });

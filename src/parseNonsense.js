@@ -213,6 +213,7 @@ export const parseNode = (node, relativeDate, weekIncrement) => {
       start,
       end,
       hasTime,
+      { title: "Nonsense NYC", url: "https://nonsensenyc.com/" },
       { ...debug, locationMatches: location }
     );
   });

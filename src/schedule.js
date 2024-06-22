@@ -12,13 +12,14 @@ export class Event {
    * @param {boolean} [hasTime=false]
    * @param {object} [debug]
    */
-  constructor(title, description, location, start, end, hasTime, debug) {
+  constructor(title, description, location, start, end, hasTime, source, debug) {
     this.title = title;
     this.description = description;
     this.location = location;
     this.start = start;
     this.end = end;
     this.hasTime = hasTime;
+    this.source = source ?? null;
     this.debug = debug;
   }
 
@@ -81,6 +82,7 @@ export class Event {
             summary: thisEvent.title,
             location: thisEvent.location,
             description: thisEvent.description,
+            source: thisEvent.source,
             start: thisEvent.hasTime
               ? {
                   dateTime: thisEvent.start.toISO({
