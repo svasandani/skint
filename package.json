@@ -7,7 +7,8 @@
   "scripts": {
     "parse": "dotenv -e .env.local node src/index.js",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "del": "dotenv -e .env.local node src/delete.js"
+    "delete": "dotenv -e .env.local node src/delete.js",
+    "edit": "dotenv -e .env.local node src/edit.js"
   },
   "repository": {
     "type": "git",

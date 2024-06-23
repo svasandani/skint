@@ -1,10 +1,19 @@
 import { google } from "googleapis";
 import { authorize } from "./calendar.js";
 
-const title = `extended hours on the high line`;
-
 const run = async () => {
   const auth = await authorize();
+
+  const title = process.argv.pop();
+
+  if (!title) {
+    throw new Error("Title is required");
+  }
+
+  console.log({
+    msg: "Deleting events with given title",
+    title,
+  })
 
   google.calendar("v3").events.list(
     {
