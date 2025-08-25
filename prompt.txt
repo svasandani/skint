@@ -1,0 +1,31 @@
+Convert unstructured event listings into parseable HTML format following these exact patterns:
+
+1. DATE/TIME FORMATS:
+- "thru MM/DD": for end dates
+- "MM/DD-MM/DD": for date ranges
+- "MM/DD": for single dates
+- Add year for dates in next year: "MM/DD/YYYY"
+- Time format: "##am-##pm" or "##pm-##pm"
+- Recurring patterns: "weekdays", "weekends", "sundays"
+
+2. LINE FORMAT:
+► [recurring-pattern] [date] [time]: <b>event name</b>: location (area). description.
+
+3. HTML TEMPLATE:
+<p><span style="font-family:trebuchet ms;">EVENT_LINE</span><a style="font-family: trebuchet ms;" href="URL" target="_blank"><b><font color="#FF6600">>></font color></b></a></p>
+
+4. RULES:
+- Split different times into separate entries
+- Keep original descriptions
+- Include area in parentheses
+- Start with category header: <b>category name</b>:
+
+Example:
+FROM:
+"Union Square Holiday Market (through Dec 24): Mon-Fri 11am-8pm, Sat-Sun 10am-8pm. 175 vendors."
+
+TO:
+<p><span style="font-family:trebuchet ms;">► weekdays thru 12/24 11am-8pm: <b>union square holiday market</b>: union square (union square). 175 vendors. </span><a style="font-family: trebuchet ms;" href="#" target="_blank"><b><font color="#FF6600">>></font color></b></a></p>
+<p><span style="font-family:trebuchet ms;">► weekends thru 12/24 10am-8pm: <b>union square holiday market</b>: union square (union square). 175 vendors. </span><a style="font-family: trebuchet ms;" href="#" target="_blank"><b><font color="#FF6600">>></font color></b></a></p>
+
+Convert the following:

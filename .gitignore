@@ -132,6 +132,7 @@ dist
 # secrets
 credentials.json
 token.json
+service_account.json
 
 # data
 nonsense.txt

@@ -16,8 +16,8 @@ const main = async () => {
   const relativeDate = process.env.DATE;
   const auth = await authorize();
 
-  if (mode !== "RSS" && mode !== "HTTP" && mode !== "NONSENSE") {
-    throw new Error("Unrecognized MODE, should be RSS, HTTP, or NONSENSE");
+  if (mode !== "RSS" && mode !== "HTTP" && mode !== "NONSENSE" && mode !== "LOCAL") {
+    throw new Error("Unrecognized MODE, should be RSS, HTTP, NONSENSE, or LOCAL");
   }
 
   let parsedEvents = [];
@@ -110,10 +110,36 @@ const main = async () => {
       nodes,
       DateTime.fromJSDate(new Date(relativeDate)).set({ second: 0, millisecond: 0 })
     );
+  } else if (mode === "LOCAL") {
+    /**
+     * LIVE=true MODE=LOCAL npm run parse > output.log
+     */
+
+    if (!relativeDate) {
+      throw new Error("Mode LOCAL requires DATE to be set");
+    }
+
+    if (!(await stat("local.txt")).isFile) {
+      throw new Error("Mode LOCAL requires local.txt file to exist");
+    }
+
+    const text = await readFile("local.txt");
+
+    const contentDom = new JSDOM(text);
+    const pNodes = contentDom.window.document.body.querySelectorAll("p");
+
+    parsedEvents = parseNodes(
+      pNodes,
+      DateTime.fromJSDate(new Date(relativeDate)).set({ second: 0, millisecond: 0 })
+    );
   }
 
   const responses = await Promise.allSettled(
-    parsedEvents.map(async (event) => {
+    parsedEvents.map(async (event, index) => {
+      if (process.env.SLOW === "true") {
+        await new Promise((resolve) => setTimeout(resolve, index * 1000));
+      }
+
       console.info({
         msg: "Processing event",
         event,

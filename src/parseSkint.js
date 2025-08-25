@@ -223,6 +223,10 @@ const FILTERS = [
     filter: (dateTime) => dateTime.weekday === 6 || dateTime.weekday === 7,
   },
   {
+    key: "weekdays",
+    filter: (dateTime) => dateTime.weekday !== 6 && dateTime.weekday !== 7,
+  },
+  {
     key: "mondays",
     filter: (dateTime) => dateTime.weekday === 1,
   },
